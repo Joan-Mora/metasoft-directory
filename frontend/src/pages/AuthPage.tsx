@@ -31,14 +31,18 @@ export function AuthPage() {
   }
 
   return (
-    <section className="panel" style={{ maxWidth: 460, margin: '0 auto' }}>
-      <h1 style={{ fontFamily: 'var(--display)', marginTop: 0 }}>
-        {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
-      </h1>
-      <p className="meta">
-        El registro habilita Mis Extracciones, Favoritos, importación con guardado y publicación.
+    <section className="panel auth-panel">
+      <p className="space-chip private">ACCESO</p>
+      <h1 className="page-title">{mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}</h1>
+      <p className="page-lead">
+        El registro habilita Mis Extracciones, Favoritos, importación con guardado y publicación al
+        canal global.
       </p>
-      {error && <div className="alert danger">{error}</div>}
+      {error && (
+        <div className="alert danger" role="alert">
+          {error}
+        </div>
+      )}
       <form className="form" onSubmit={onSubmit}>
         {mode === 'register' && (
           <label>
@@ -67,7 +71,6 @@ export function AuthPage() {
       <button
         type="button"
         className="btn ghost"
-        style={{ marginTop: '0.75rem' }}
         onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
       >
         {mode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión'}

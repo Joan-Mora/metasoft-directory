@@ -1,7 +1,7 @@
 /**
  * © Joan Mora — Proprietary. See LICENSE.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { ExtractPreview, SaveMode } from '../types'
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
 }
 
 export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Props) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
   const [draft, setDraft] = useState(data)
   const [editing, setEditing] = useState(false)
   const [manuallyModified, setManuallyModified] = useState(false)
@@ -19,11 +21,26 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => setDraft(data), [data])
+  useEffect(() => {
+    setDraft(data)
+    setEditing(false)
+    setManuallyModified(false)
+    setSaveOpen(false)
+    setError('')
+  }, [data])
+
+  useEffect(() => {
+    const d = dialogRef.current
+    if (!d) return
+    if (!d.open) d.showModal()
+    const onCloseEvt = () => onClose()
+    d.addEventListener('close', onCloseEvt)
+    return () => d.removeEventListener('close', onCloseEvt)
+  }, [onClose])
 
   const startEdit = () => {
     const ok = window.confirm(
-      'Si editas la información, se marcará como modificada manualmente y NO podrás publicarla; solo se guardará en Mis Extracciones. ¿Continuar?'
+      'Si editas la información, se marcará como «Modificado manualmente» y NO podrás publicarla; solo se guardará en Mis Extracciones. ¿Continuar?'
     )
     if (!ok) return
     setEditing(true)
@@ -33,13 +50,15 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
   const save = async (mode: SaveMode) => {
     setError('')
     if (manuallyModified && mode !== 'private') {
-      setError('Contenido editado manualmente: solo puedes guardarlo en Mis Extracciones (privado).')
+      setError(
+        'Contenido editado manualmente: solo puedes guardarlo en Mis Extracciones (privado).'
+      )
       return
     }
     setBusy(true)
     try {
       await onSave({ ...draft, mode, manuallyModified })
-      onClose()
+      dialogRef.current?.close()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo guardar')
     } finally {
@@ -49,16 +68,20 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal">
-        <h2>Vista previa de extracción</h2>
+    <dialog ref={dialogRef} className="signal-dialog" aria-labelledby={titleId}>
+      <div className="signal-dialog-body">
+        <h2 id={titleId}>Vista previa de extracción</h2>
         {manuallyModified && (
           <div className="alert danger">
-            Esta ficha será etiquetada como <strong>modificada manualmente</strong>. Solo podrá
-            guardarse en Mis Extracciones (sin publicación global).
+            Etiqueta activa: <span className="badge edited">Modificado manualmente</span>. Las
+            opciones de publicar están deshabilitadas.
           </div>
         )}
-        {error && <div className="alert danger">{error}</div>}
+        {error && (
+          <div className="alert danger" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className="form">
           <label>
@@ -119,15 +142,23 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
               onChange={(e) =>
                 setDraft({
                   ...draft,
-                  highlights: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean),
+                  highlights: e.target.value
+                    .split('\n')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
                 })
               }
             />
           </label>
         </div>
 
-        <div className="cta-row" style={{ marginTop: '1rem' }}>
-          <button type="button" className="btn secondary" onClick={onClose} disabled={busy}>
+        <div className="cta-row">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => dialogRef.current?.close()}
+            disabled={busy}
+          >
             Descartar
           </button>
           <button type="button" className="btn secondary" onClick={startEdit} disabled={busy || editing}>
@@ -137,38 +168,60 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
             type="button"
             className="btn secondary"
             disabled={busy}
-            onClick={() => onExportPdf(draft)}
+            onClick={() => void onExportPdf(draft)}
           >
             Guardar PDF
           </button>
           <div className="dropdown">
-            <button type="button" className="btn" disabled={busy} onClick={() => setSaveOpen((v) => !v)}>
+            <button
+              type="button"
+              className="btn"
+              disabled={busy}
+              aria-haspopup="menu"
+              aria-expanded={saveOpen}
+              onClick={() => setSaveOpen((v) => !v)}
+            >
               Guardar ▾
             </button>
             {saveOpen && (
-              <div className="dropdown-panel">
-                <button type="button" disabled={busy} onClick={() => save('private')}>
+              <div className="dropdown-panel" role="menu">
+                <button type="button" role="menuitem" disabled={busy} onClick={() => void save('private')}>
                   Solo para mí
                 </button>
                 <button
                   type="button"
+                  role="menuitem"
                   disabled={busy || manuallyModified}
-                  onClick={() => save('private_and_publish')}
+                  title={
+                    manuallyModified
+                      ? 'No disponible: la ficha fue modificada manualmente'
+                      : undefined
+                  }
+                  onClick={() => void save('private_and_publish')}
                 >
                   Para mí y publicar
                 </button>
                 <button
                   type="button"
+                  role="menuitem"
                   disabled={busy || manuallyModified}
-                  onClick={() => save('publish')}
+                  title={
+                    manuallyModified
+                      ? 'No disponible: la ficha fue modificada manualmente'
+                      : undefined
+                  }
+                  onClick={() => void save('publish')}
                 >
                   Solo publicar
                 </button>
+                {manuallyModified && (
+                  <p className="meta">Publicar bloqueado por edición manual.</p>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }

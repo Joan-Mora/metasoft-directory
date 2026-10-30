@@ -175,7 +175,7 @@ export function Layout() {
       </main>
 
       <footer className="footer">
-        © {new Date().getFullYear()} Joan Mora · Licencia propietaria · Signal Layer · Taller 1 C3
+        © 2026 Joan Mora · Licencia propietaria · Signal Layer · Taller 1 C3
       </footer>
     </div>
   )

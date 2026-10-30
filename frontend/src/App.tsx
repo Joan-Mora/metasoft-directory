@@ -1,17 +1,41 @@
 /**
  * © Joan Mora — Proprietary. See LICENSE.
  */
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { CardSkeletonGrid } from './components/StateView'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
-import { AdminPage } from './pages/AdminPage'
-import { AuthPage } from './pages/AuthPage'
-import { CategoriesPage } from './pages/CategoriesPage'
-import { DirectoryPage } from './pages/DirectoryPage'
 import { HomePage } from './pages/HomePage'
-import { ImportPage } from './pages/ImportPage'
-import { MyExtractionsPage } from './pages/MyExtractionsPage'
+
+const DirectoryPage = lazy(() =>
+  import('./pages/DirectoryPage').then((m) => ({ default: m.DirectoryPage }))
+)
+const CategoriesPage = lazy(() =>
+  import('./pages/CategoriesPage').then((m) => ({ default: m.CategoriesPage }))
+)
+const ImportPage = lazy(() =>
+  import('./pages/ImportPage').then((m) => ({ default: m.ImportPage }))
+)
+const MyExtractionsPage = lazy(() =>
+  import('./pages/MyExtractionsPage').then((m) => ({ default: m.MyExtractionsPage }))
+)
+const AdminPage = lazy(() =>
+  import('./pages/AdminPage').then((m) => ({ default: m.AdminPage }))
+)
+const AuthPage = lazy(() =>
+  import('./pages/AuthPage').then((m) => ({ default: m.AuthPage }))
+)
+
+function RouteFallback() {
+  return (
+    <div role="status" aria-live="polite">
+      <span className="sr-only">Cargando vista…</span>
+      <CardSkeletonGrid count={3} />
+    </div>
+  )
+}
 
 export default function App() {
   return (
@@ -21,12 +45,54 @@ export default function App() {
           <Routes>
             <Route element={<Layout />}>
               <Route index element={<HomePage />} />
-              <Route path="directorio" element={<DirectoryPage />} />
-              <Route path="categorias" element={<CategoriesPage />} />
-              <Route path="importar" element={<ImportPage />} />
-              <Route path="mis-extracciones" element={<MyExtractionsPage />} />
-              <Route path="admin" element={<AdminPage />} />
-              <Route path="auth" element={<AuthPage />} />
+              <Route
+                path="directorio"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <DirectoryPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="categorias"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <CategoriesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="importar"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <ImportPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="mis-extracciones"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <MyExtractionsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="admin"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <AdminPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="auth"
+                element={
+                  <Suspense fallback={<RouteFallback />}>
+                    <AuthPage />
+                  </Suspense>
+                }
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

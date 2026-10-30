@@ -1,10 +1,12 @@
 /**
  * © Joan Mora — Proprietary. See LICENSE.
  */
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
+import { StateView } from '../components/StateView'
 import { useAuth } from '../context/AuthContext'
+import { useApi } from '../hooks/useApi'
 import type { CompanyCard } from '../types'
 
 const empty = {
@@ -19,24 +21,22 @@ const empty = {
 
 export function AdminPage() {
   const { user } = useAuth()
-  const [items, setItems] = useState<CompanyCard[]>([])
   const [form, setForm] = useState(empty)
   const [editId, setEditId] = useState<string | null>(null)
-  const [error, setError] = useState('')
+  const [formError, setFormError] = useState('')
 
-  const load = () =>
-    api<CompanyCard[]>('/companies')
-      .then(setItems)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Error'))
-
-  useEffect(() => {
-    void load()
+  const { data, loading, error, reload } = useApi(async (signal) => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/companies`, { signal })
+    if (!res.ok) throw new Error('No se pudieron cargar las casas')
+    return (await res.json()) as CompanyCard[]
   }, [])
+
+  const items = data ?? []
 
   if (!user) {
     return (
       <section className="panel">
-        <h1 style={{ fontFamily: 'var(--display)' }}>CRUD de casas</h1>
+        <h1 className="page-title">CRUD de casas</h1>
         <div className="alert">
           Operaciones de escritura requieren cuenta. <Link to="/auth">Entrar</Link>
         </div>
@@ -46,7 +46,7 @@ export function AdminPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError('')
+    setFormError('')
     try {
       if (editId) {
         await api(`/companies/${editId}`, {
@@ -58,9 +58,9 @@ export function AdminPage() {
       }
       setForm(empty)
       setEditId(null)
-      await load()
+      reload()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar')
+      setFormError(err instanceof Error ? err.message : 'Error al guardar')
     }
   }
 
@@ -78,18 +78,22 @@ export function AdminPage() {
   }
 
   const onDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta casa del directorio global?')) return
+    if (!confirm('¿Eliminar esta casa del directorio global? Esta acción no se puede deshacer.')) {
+      return
+    }
     await api(`/companies/${id}`, { method: 'DELETE' })
-    await load()
+    reload()
   }
 
   return (
     <section className="split two">
       <div className="panel">
-        <h1 style={{ fontFamily: 'var(--display)', marginTop: 0 }}>
-          {editId ? 'Editar casa' : 'Crear casa'}
-        </h1>
-        {error && <div className="alert danger">{error}</div>}
+        <h1 className="page-title">{editId ? 'Editar casa' : 'Crear casa'}</h1>
+        {formError && (
+          <div className="alert danger" role="alert">
+            {formError}
+          </div>
+        )}
         <form className="form" onSubmit={onSubmit}>
           {(
             [
@@ -138,23 +142,25 @@ export function AdminPage() {
         </form>
       </div>
       <div>
-        <h2 style={{ fontFamily: 'var(--display)' }}>Registros ({items.length})</h2>
-        <div className="grid-cards">
-          {items.map((c) => (
-            <div key={c._id} className="panel" style={{ padding: '0.9rem' }}>
-              <strong>{c.name}</strong>
-              <div className="meta">{c.specialty}</div>
-              <div className="cta-row" style={{ marginTop: '0.6rem' }}>
-                <button type="button" className="btn secondary" onClick={() => onEdit(c)}>
-                  Editar
-                </button>
-                <button type="button" className="btn danger" onClick={() => void onDelete(c._id)}>
-                  Eliminar
-                </button>
+        <h2 className="page-title">Registros ({items.length})</h2>
+        <StateView loading={loading} error={error} onRetry={reload}>
+          <div className="grid-cards">
+            {items.map((c) => (
+              <div key={c._id} className="panel">
+                <strong>{c.name}</strong>
+                <div className="meta">{c.specialty}</div>
+                <div className="cta-row">
+                  <button type="button" className="btn secondary" onClick={() => onEdit(c)}>
+                    Editar
+                  </button>
+                  <button type="button" className="btn danger" onClick={() => void onDelete(c._id)}>
+                    Eliminar
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </StateView>
       </div>
     </section>
   )

@@ -1,42 +1,54 @@
 /**
  * © Joan Mora — Proprietary. See LICENSE.
  */
-import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { api, downloadPdf } from '../api/client'
 import { CompanyCardView } from '../components/CompanyCardView'
+import { SelectionDock } from '../components/SelectionDock'
+import { StateView } from '../components/StateView'
 import { useAuth } from '../context/AuthContext'
+import { useApi } from '../hooks/useApi'
 import type { CompanyCard } from '../types'
 
 export function DirectoryPage() {
   const { user } = useAuth()
-  const [q, setQ] = useState('')
-  const [items, setItems] = useState<CompanyCard[]>([])
+  const [params, setParams] = useSearchParams()
+  const initialQ = params.get('q') || ''
+  const [q, setQ] = useState(initialQ)
+  const [submitted, setSubmitted] = useState(initialQ)
   const [selected, setSelected] = useState<Record<string, boolean>>({})
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [selectMode, setSelectMode] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
 
-  const load = async (query = q) => {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await api<CompanyCard[]>(`/companies?q=${encodeURIComponent(query)}`)
-      setItems(data)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al cargar')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, loading, error, reload } = useApi(
+    async (signal) => {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || '/api'}/companies?q=${encodeURIComponent(submitted)}`,
+        {
+          signal,
+          headers: localStorage.getItem('token')
+            ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            : undefined,
+        }
+      )
+      if (!res.ok) throw new Error('No se pudo cargar el directorio')
+      return (await res.json()) as CompanyCard[]
+    },
+    [submitted]
+  )
 
-  useEffect(() => {
-    void load('')
-  }, [])
-
+  const items = data ?? []
   const selectedIds = useMemo(
     () => Object.entries(selected).filter(([, v]) => v).map(([k]) => k),
     [selected]
   )
+
+  const onSearch = () => {
+    setSubmitted(q.trim())
+    setParams(q.trim() ? { q: q.trim() } : {})
+    setSelected({})
+  }
 
   const onFavorite = async (company: CompanyCard) => {
     if (!user) {
@@ -54,56 +66,96 @@ export function DirectoryPage() {
     }
   }
 
+  const exportPdf = async () => {
+    setPdfBusy(true)
+    try {
+      await downloadPdf({ companyIds: selectedIds, title: 'Directorio global — selección' })
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al exportar')
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   return (
     <section>
-      <h1 style={{ fontFamily: 'var(--display)' }}>Directorio global</h1>
-      <p className="meta">Busca por nombre o parte del nombre. La imagen redirige al sitio oficial.</p>
+      <h1 className="page-title">Directorio global</h1>
+      <p className="page-lead">
+        Busca por nombre o parte del nombre. La señal SNR indica completitud. El logo abre el sitio
+        oficial.
+      </p>
       {!user && (
-        <div className="alert info" style={{ marginBottom: '1rem' }}>
+        <div className="alert info">
           Inicia sesión para favoritos, importación con guardado y espacio personal.{' '}
           <Link to="/auth">Entrar</Link>
         </div>
       )}
       <div className="toolbar">
+        <label className="sr-only" htmlFor="dir-search">
+          Buscar casa desarrolladora
+        </label>
         <input
+          id="dir-search"
           type="search"
-          placeholder="Buscar casa desarrolladora…"
+          placeholder="Buscar señal… p.ej. CODAL"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && void load()}
+          onKeyDown={(e) => e.key === 'Enter' && onSearch()}
         />
-        <button type="button" className="btn" onClick={() => void load()}>
+        <button type="button" className="btn" onClick={onSearch}>
           Buscar
         </button>
         <button
           type="button"
-          className="btn secondary"
-          disabled={!selectedIds.length}
-          onClick={() =>
-            void downloadPdf({ companyIds: selectedIds, title: 'Directorio global — selección' })
-          }
+          className={`btn secondary${selectMode ? ' is-on' : ''}`}
+          aria-pressed={selectMode}
+          onClick={() => {
+            setSelectMode((v) => !v)
+            setSelected({})
+          }}
         >
-          Exportar PDF ({selectedIds.length})
+          {selectMode ? 'Cancelar selección' : 'Modo selección'}
         </button>
       </div>
-      {error && <div className="alert danger">{error}</div>}
-      {loading ? (
-        <div className="empty">Cargando…</div>
-      ) : items.length === 0 ? (
-        <div className="empty">Sin resultados</div>
-      ) : (
-        <div className="grid-cards">
-          {items.map((c) => (
+
+      <StateView
+        loading={loading}
+        error={error}
+        onRetry={reload}
+        empty={!loading && !error && items.length === 0}
+        emptyTitle="Sin coincidencias"
+        emptyHint="Prueba con otra parte del nombre o limpia la búsqueda."
+        emptyAction={
+          <button type="button" className="btn secondary" onClick={() => { setQ(''); setSubmitted(''); setParams({}) }}>
+            Ver todas
+          </button>
+        }
+      >
+        <div className="grid-cards grid-bento">
+          {items.map((c, i) => (
             <CompanyCardView
               key={c._id}
               company={c}
+              query={submitted}
+              featured={i === 0 && !submitted}
               selected={!!selected[c._id]}
-              onSelect={(id, checked) => setSelected((s) => ({ ...s, [id]: checked }))}
+              onSelect={
+                selectMode
+                  ? (id, checked) => setSelected((s) => ({ ...s, [id]: checked }))
+                  : undefined
+              }
               onFavorite={onFavorite}
             />
           ))}
         </div>
-      )}
+      </StateView>
+
+      <SelectionDock
+        count={selectedIds.length}
+        onExport={() => void exportPdf()}
+        onClear={() => setSelected({})}
+        busy={pdfBusy}
+      />
     </section>
   )
 }

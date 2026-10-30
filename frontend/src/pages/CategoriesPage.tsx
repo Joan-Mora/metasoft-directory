@@ -1,41 +1,45 @@
 /**
  * © Joan Mora — Proprietary. See LICENSE.
  */
-import { useEffect, useState } from 'react'
-import { api } from '../api/client'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CompanyCardView } from '../components/CompanyCardView'
+import { StateView } from '../components/StateView'
+import { useApi } from '../hooks/useApi'
 import type { CompanyCard, DataStatus } from '../types'
 
 const tabs: { id: DataStatus; label: string; hint: string }[] = [
-  { id: 'complete', label: 'Datos completos', hint: 'Núcleo + web/logo/descripción' },
+  { id: 'complete', label: 'Completas', hint: 'Núcleo + web/logo/descripción' },
   { id: 'partial', label: 'Datos parciales', hint: 'Al menos un dato relevante' },
   { id: 'none', label: 'Sin datos registrados', hint: 'Sin información enriquecida útil' },
 ]
 
 export function CategoriesPage() {
   const [status, setStatus] = useState<DataStatus>('complete')
-  const [items, setItems] = useState<CompanyCard[]>([])
-  const [loading, setLoading] = useState(true)
+  const current = tabs.find((t) => t.id === status)!
 
-  useEffect(() => {
-    setLoading(true)
-    api<CompanyCard[]>(`/companies/by-status/${status}`)
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false))
+  const { data, loading, error, reload } = useApi(async (signal) => {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL || '/api'}/companies/by-status/${status}`,
+      { signal }
+    )
+    if (!res.ok) throw new Error('No se pudieron cargar las categorías')
+    return (await res.json()) as CompanyCard[]
   }, [status])
 
-  const current = tabs.find((t) => t.id === status)!
+  const items = data ?? []
 
   return (
     <section>
-      <h1 style={{ fontFamily: 'var(--display)' }}>Categorías de completitud</h1>
-      <p className="meta">{current.hint}</p>
-      <div className="tabs">
+      <h1 className="page-title">Categorías de señal</h1>
+      <p className="page-lead">{current.hint}</p>
+      <div className="tabs" role="tablist" aria-label="Nivel de completitud">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
+            role="tab"
+            aria-selected={status === t.id}
             className={status === t.id ? 'active' : ''}
             onClick={() => setStatus(t.id)}
           >
@@ -43,17 +47,27 @@ export function CategoriesPage() {
           </button>
         ))}
       </div>
-      {loading ? (
-        <div className="empty">Cargando…</div>
-      ) : items.length === 0 ? (
-        <div className="empty">No hay empresas en esta categoría</div>
-      ) : (
-        <div className="grid-cards">
-          {items.map((c) => (
-            <CompanyCardView key={c._id} company={c} showMenu={false} />
-          ))}
-        </div>
-      )}
+      <div className="category-band" data-level={status}>
+        <StateView
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          empty={!loading && !error && items.length === 0}
+          emptyTitle="Sin empresas en esta banda"
+          emptyHint="Importa una URL o revisa otra categoría."
+          emptyAction={
+            <Link className="btn" to="/importar">
+              Ir a Importar
+            </Link>
+          }
+        >
+          <div className="grid-cards">
+            {items.map((c) => (
+              <CompanyCardView key={c._id} company={c} showMenu={false} />
+            ))}
+          </div>
+        </StateView>
+      </div>
     </section>
   )
 }

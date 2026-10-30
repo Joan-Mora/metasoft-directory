@@ -17,11 +17,12 @@ export interface PdfCard {
 }
 
 const COLORS = {
-  ink: '#0f172a',
-  muted: '#475569',
-  accent: '#0d9488',
-  line: '#e2e8f0',
-  badge: '#ccfbf1',
+  ink: '#0b1220',
+  muted: '#4a5a72',
+  accent: '#0891b2',
+  accent2: '#6d5efc',
+  line: '#d5dee8',
+  badge: '#e6f7fb',
 };
 
 export async function buildCompaniesPdf(cards: PdfCard[], title = 'Directorio — Extracciones'): Promise<Buffer> {
@@ -32,9 +33,16 @@ export async function buildCompaniesPdf(cards: PdfCard[], title = 'Directorio �
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    doc.fillColor(COLORS.accent).fontSize(20).text(title, { align: 'left' });
+    doc.fillColor(COLORS.accent).fontSize(9).text('METASOFT · SIGNAL LAYER', { align: 'left' });
+    doc.moveDown(0.2);
+    doc.fillColor(COLORS.ink).fontSize(18).text(title, { align: 'left' });
     doc.moveDown(0.3);
-    doc.fillColor(COLORS.muted).fontSize(10).text(`Generado ${new Date().toLocaleString('es-CO')} · © Joan Mora`);
+    doc
+      .fillColor(COLORS.muted)
+      .fontSize(9)
+      .text(
+        `Generado ${new Date().toLocaleString('es-CO')} · Origen: extracción / directorio MongoDB · © Joan Mora`
+      );
     doc.moveDown(0.5);
     doc.strokeColor(COLORS.line).moveTo(48, doc.y).lineTo(547, doc.y).stroke();
     doc.moveDown(1);
