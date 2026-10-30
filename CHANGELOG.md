@@ -20,4 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security hardening (Helmet, rate-limit, AES field crypto, SSRF guards).
 - Proprietary LICENSE and project documentation set.
 
-[0.1.0]: https://github.com/Avellano2026/metasoft-directory/releases/tag/v0.1.0
+[0.1.0]: https://github.com/Joan-Mora/metasoft-directory/releases/tag/v0.1.0
