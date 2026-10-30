@@ -24,6 +24,7 @@ export function MyExtractionsPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [selectMode, setSelectMode] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [toast, setToast] = useState('')
 
   const loadAll = useCallback(async (signal: AbortSignal) => {
     const headers: HeadersInit = {}
@@ -67,6 +68,14 @@ export function MyExtractionsPage() {
       <p className="space-chip private">CANAL PRIVADO</p>
       <h1 className="page-title">Mis Extracciones</h1>
       <p className="page-lead">Tus fichas personales y favoritos. Lo publicado global vive aparte.</p>
+      {toast && (
+        <div className="alert success" role="status">
+          {toast}
+          <button type="button" className="toast-dismiss" onClick={() => setToast('')}>
+            Cerrar
+          </button>
+        </div>
+      )}
 
       <div className="tabs" role="tablist">
         <button
@@ -129,11 +138,17 @@ export function MyExtractionsPage() {
                       : undefined
                   }
                   onFavorite={async (company) => {
-                    await api('/favorites', {
-                      method: 'POST',
-                      body: JSON.stringify({ refType: 'extraction', refId: company._id }),
-                    })
-                    reload()
+                    try {
+                      await api('/favorites', {
+                        method: 'POST',
+                        body: JSON.stringify({ refType: 'extraction', refId: company._id }),
+                      })
+                      setToast(`«${company.name}» se guardó en Favoritos.`)
+                      setTab('favorites')
+                      reload()
+                    } catch (e) {
+                      alert(e instanceof Error ? e.message : 'No se pudo guardar')
+                    }
                   }}
                 />
               ))}

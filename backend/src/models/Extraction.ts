@@ -59,11 +59,10 @@ const extractionSchema = new Schema<IExtraction>(
   { timestamps: true }
 );
 
-extractionSchema.pre('save', function (next) {
+extractionSchema.pre('save', function () {
   if (this.isModified('phone') && this.phone && !looksEncrypted(this.phone)) {
     this.phone = encryptField(this.phone);
   }
-  next();
 });
 
 function decryptPhone(doc: IExtraction | null) {

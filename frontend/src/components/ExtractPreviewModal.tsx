@@ -70,89 +70,91 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
   return (
     <dialog ref={dialogRef} className="signal-dialog" aria-labelledby={titleId}>
       <div className="signal-dialog-body">
-        <h2 id={titleId}>Vista previa de extracción</h2>
-        {manuallyModified && (
-          <div className="alert danger">
-            Etiqueta activa: <span className="badge edited">Modificado manualmente</span>. Las
-            opciones de publicar están deshabilitadas.
-          </div>
-        )}
-        {error && (
-          <div className="alert danger" role="alert">
-            {error}
-          </div>
-        )}
+        <div className="signal-dialog-scroll">
+          <h2 id={titleId}>Vista previa de extracción</h2>
+          {manuallyModified && (
+            <div className="alert danger">
+              Etiqueta activa: <span className="badge edited">Modificado manualmente</span>. Las
+              opciones de publicar están deshabilitadas.
+            </div>
+          )}
+          {error && (
+            <div className="alert danger" role="alert">
+              {error}
+            </div>
+          )}
 
-        <div className="form">
-          <label>
-            Nombre
-            <input
-              value={draft.name}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            />
-          </label>
-          <label>
-            Especialidad
-            <input
-              value={draft.specialty}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, specialty: e.target.value })}
-            />
-          </label>
-          <label>
-            Dirección
-            <input
-              value={draft.address}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, address: e.target.value })}
-            />
-          </label>
-          <label>
-            Teléfono
-            <input
-              value={draft.phone}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
-            />
-          </label>
-          <label>
-            Sitio web
-            <input
-              value={draft.website}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, website: e.target.value })}
-            />
-          </label>
-          <label>
-            Descripción
-            <textarea
-              rows={4}
-              value={draft.description}
-              disabled={!editing}
-              onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-            />
-          </label>
-          <label>
-            Destacados (uno por línea)
-            <textarea
-              rows={3}
-              value={(draft.highlights || []).join('\n')}
-              disabled={!editing}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  highlights: e.target.value
-                    .split('\n')
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
-          </label>
+          <div className="form">
+            <label>
+              Nombre
+              <input
+                value={draft.name}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              />
+            </label>
+            <label>
+              Especialidad
+              <input
+                value={draft.specialty}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, specialty: e.target.value })}
+              />
+            </label>
+            <label>
+              Dirección
+              <input
+                value={draft.address}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, address: e.target.value })}
+              />
+            </label>
+            <label>
+              Teléfono
+              <input
+                value={draft.phone}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
+              />
+            </label>
+            <label>
+              Sitio web
+              <input
+                value={draft.website}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, website: e.target.value })}
+              />
+            </label>
+            <label>
+              Descripción
+              <textarea
+                rows={4}
+                value={draft.description}
+                disabled={!editing}
+                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              />
+            </label>
+            <label>
+              Destacados (uno por línea)
+              <textarea
+                rows={3}
+                value={(draft.highlights || []).join('\n')}
+                disabled={!editing}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    highlights: e.target.value
+                      .split('\n')
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  })
+                }
+              />
+            </label>
+          </div>
         </div>
 
-        <div className="cta-row">
+        <div className="cta-row signal-dialog-actions">
           <button
             type="button"
             className="btn secondary"
@@ -172,7 +174,7 @@ export function ExtractPreviewModal({ data, onClose, onSave, onExportPdf }: Prop
           >
             Guardar PDF
           </button>
-          <div className="dropdown">
+          <div className="dropdown dropdown-up">
             <button
               type="button"
               className="btn"

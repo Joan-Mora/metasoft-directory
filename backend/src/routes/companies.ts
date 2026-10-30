@@ -4,6 +4,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Company } from '../models/Company.js';
+import { Extraction } from '../models/Extraction.js';
+import { duplicateMessage, findDuplicateSite } from '../services/duplicateSite.js';
 import { computeDataStatus } from '../utils/dataStatus.js';
 import { requireAuth } from '../middleware/auth.js';
 import { encryptField } from '../utils/crypto.js';
@@ -29,13 +31,44 @@ router.get('/', async (req, res, next) => {
   try {
     const q = String(req.query.q || '').trim();
     const status = String(req.query.status || '').trim();
-    const filter: Record<string, unknown> = {};
-    if (q) filter.name = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
-    if (status && ['complete', 'partial', 'none'].includes(status)) {
-      filter.dataStatus = status;
-    }
-    const companies = await Company.find(filter).sort({ name: 1 }).limit(200);
-    res.json(companies);
+    const nameFilter = q
+      ? { name: { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }
+      : {};
+    const statusOk = ['complete', 'partial', 'none'].includes(status) ? status : '';
+
+    const [companies, published] = await Promise.all([
+      Company.find(nameFilter).limit(200),
+      Extraction.find({
+        visibility: { $in: ['published', 'both'] },
+        manuallyModified: false,
+        ...nameFilter,
+      }).limit(100),
+    ]);
+
+    const merged = [
+      ...companies.map((c) => {
+        const o = c.toObject();
+        return {
+          ...o,
+          _id: String(o._id),
+          dataStatus: computeDataStatus(o),
+          refType: 'company' as const,
+        };
+      }),
+      ...published.map((e) => {
+        const o = e.toObject();
+        return {
+          ...o,
+          _id: String(o._id),
+          dataStatus: computeDataStatus(o),
+          refType: 'extraction' as const,
+        };
+      }),
+    ]
+      .filter((item) => !statusOk || item.dataStatus === statusOk)
+      .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+
+    res.json(merged.slice(0, 200));
   } catch (e) {
     next(e);
   }
@@ -54,6 +87,26 @@ router.get('/by-status/:status', async (req, res, next) => {
   }
 });
 
+/** Casas semilla / creadas por admin (colección Company). */
+router.get('/source', requireAuth, async (_req, res, next) => {
+  try {
+    const companies = await Company.find().sort({ name: 1 }).limit(300);
+    res.json(
+      companies.map((c) => {
+        const o = c.toObject();
+        return {
+          ...o,
+          _id: String(o._id),
+          dataStatus: computeDataStatus(o),
+          refType: 'company' as const,
+        };
+      })
+    );
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.get('/:id', async (req, res, next) => {
   try {
     const company = await Company.findById(req.params.id);
@@ -67,6 +120,12 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const body = companySchema.parse(req.body);
+    const dup = await findDuplicateSite({
+      urls: [body.website, body.sourceUrl],
+    });
+    if (dup) {
+      return res.status(409).json({ error: duplicateMessage(dup), duplicate: true, hit: dup });
+    }
     const dataStatus = computeDataStatus(body);
     const company = await Company.create({ ...body, dataStatus });
     res.status(201).json(company);
@@ -84,6 +143,15 @@ router.put('/:id', requireAuth, async (req, res, next) => {
     Object.assign(existing, body);
     if (body.phone) existing.phone = encryptField(body.phone);
     existing.manuallyModified = body.manuallyModified ?? true;
+
+    const dup = await findDuplicateSite({
+      urls: [existing.website, existing.sourceUrl],
+      excludeCompanyId: String(existing._id),
+    });
+    if (dup) {
+      return res.status(409).json({ error: duplicateMessage(dup), duplicate: true, hit: dup });
+    }
+
     existing.dataStatus = computeDataStatus(existing);
     await existing.save();
     // re-fetch to trigger decrypt hooks

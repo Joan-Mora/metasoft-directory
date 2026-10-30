@@ -5,6 +5,26 @@ Todos los cambios relevantes de este proyecto se documentan aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).  
 Versionado semántico [SemVer](https://semver.org/lang/es/).
 
+## [0.3.0] — 2026-10-30
+
+### Added
+- Historial de actividad de importación (`ImportActivity`) con listado en Importar.
+- Mensajes de éxito al extraer, guardar, favoritos y exportar PDF.
+- Anti-duplicados por dominio (`siteKey` + `duplicateSite`); check previo y HTTP 409.
+- CRUD admin dual: **Fuente** / **Externas** / **Todas** (`/companies/source`, `/extractions/admin/*`).
+- Directorio unificado: compañías semilla + extracciones publicadas (`refType`).
+
+### Changed
+- Visibilidad: *Solo publicar* → solo Directorio; *Para mí y publicar* → ambos; mine excluye `published`.
+- SNR: completa si faltan ≤2 campos y hay logo; parcial si faltan ≥3 (o ≤2 sin logo).
+- Extracción: JSON-LD, `tel:`, footer/contacto, ubicación CO; hooks Mongoose 9 sin `next()`.
+- Menús ⋮ y Guardar ▾ como overlays (no alargan la card); Descartar reinicia el pipeline.
+- Manual de usuario y manual técnico actualizados a 0.3.
+
+### Fixed
+- Error al guardar extracción (`next is not a function` en `pre('save')`).
+- Favoritos desde directorio con `refType` correcto para importaciones.
+
 ## [0.2.0] — 2026-10-30
 
 ### Added
@@ -37,5 +57,6 @@ Versionado semántico [SemVer](https://semver.org/lang/es/).
 - Mis Extracciones, Favoritos, export PDF.
 - Hardening de seguridad y licencia propietaria.
 
+[0.3.0]: https://github.com/Joan-Mora/metasoft-directory/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Joan-Mora/metasoft-directory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Joan-Mora/metasoft-directory/releases/tag/v0.1.0

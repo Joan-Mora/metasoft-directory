@@ -14,6 +14,7 @@ import extractRoutes from './routes/extract.js';
 import extractionRoutes from './routes/extractions.js';
 import favoriteRoutes from './routes/favorites.js';
 import exportRoutes from './routes/exportPdf.js';
+import importActivityRoutes from './routes/importActivity.js';
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/extract', extractRoutes);
 app.use('/api/extractions', extractionRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/export/pdf', exportRoutes);
+app.use('/api/import-activity', importActivityRoutes);
 
 app.use(errorHandler);
 

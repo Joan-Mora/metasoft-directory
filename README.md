@@ -8,7 +8,7 @@
 | **Autor** | Joan Mora |
 | **Repositorio** | [github.com/Joan-Mora/metasoft-directory](https://github.com/Joan-Mora/metasoft-directory) (**privado**) |
 | **Licencia** | Propietaria — ver [`LICENSE`](LICENSE) |
-| **Versión** | 0.2.0 |
+| **Versión** | 0.3.0 |
 
 ---
 
@@ -71,14 +71,14 @@ Atajo en la UI: **Ctrl / ⌘ + K** — paleta de comandos (buscar empresa o nave
 
 ## Capacidades principales
 
-- Búsqueda por nombre (parcial) con resaltado + filtros SNR en el mismo Directorio
-- Fichas con logo clicable → sitio oficial, anillo SNR, menú ⋮ → Favoritos
-- Importar URL con pipeline animado y vista previa (`<dialog>`)
+- Directorio unificado (semilla + importaciones publicadas) con búsqueda y filtros SNR
+- Fichas con logo clicable → sitio oficial, anillo SNR, menú ⋮ → Favoritos (con confirmación)
+- Importar URL con pipeline, vista previa, historial de actividad y anti-duplicados por dominio
 - Guardar: solo para mí · para mí y publicar · solo publicar  
-  (si se edita a mano → etiqueta *Modificado manualmente* → solo privado)
-- Mis Extracciones (privado) + pestaña Favoritos
+  (edición manual → solo privado; *solo publicar* no entra en Mis Extracciones)
+- Mis Extracciones (privado / both) + pestaña Favoritos
 - Exportación PDF individual y multi-selección (barra flotante)
-- CRUD autenticado de casas del directorio global
+- CRUD autenticado: Fuente / Externas / Todas
 - Tema claro / oscuro persistente
 
 ---

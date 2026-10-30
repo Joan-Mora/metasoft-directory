@@ -18,6 +18,9 @@ export interface CompanyCard {
   dataStatus: DataStatus
   manuallyModified: boolean
   sourceUrl: string
+  /** Presente en el directorio unificado (seed vs importación publicada). */
+  refType?: 'company' | 'extraction'
+  visibility?: 'private' | 'published' | 'both'
 }
 
 export interface Extraction extends CompanyCard {
@@ -36,3 +39,15 @@ export interface ExtractPreview extends Omit<CompanyCard, '_id'> {
 }
 
 export type SaveMode = 'private' | 'publish' | 'private_and_publish'
+
+export type ImportActivityAction = 'extract_ok' | 'extract_fail' | 'saved' | 'discarded'
+
+export interface ImportActivity {
+  _id: string
+  action: ImportActivityAction
+  sourceUrl: string
+  name: string
+  detail: string
+  mode?: string
+  createdAt: string
+}

@@ -34,6 +34,7 @@ export function DirectoryPage() {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [selectMode, setSelectMode] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [toast, setToast] = useState('')
 
   const { data, loading, error, reload } = useApi(
     async (signal) => {
@@ -91,16 +92,19 @@ export function DirectoryPage() {
 
   const onFavorite = async (company: CompanyCard) => {
     if (!user) {
+      setToast('')
       alert('Inicia sesión para guardar favoritos.')
       return
     }
     try {
+      const refType = company.refType || 'company'
       await api('/favorites', {
         method: 'POST',
-        body: JSON.stringify({ refType: 'company', refId: company._id }),
+        body: JSON.stringify({ refType, refId: company._id }),
       })
-      alert('Añadido a Favoritos')
+      setToast(`«${company.name}» se guardó en Favoritos.`)
     } catch (e) {
+      setToast('')
       alert(e instanceof Error ? e.message : 'No se pudo guardar')
     }
   }
@@ -108,7 +112,19 @@ export function DirectoryPage() {
   const exportPdf = async () => {
     setPdfBusy(true)
     try {
-      await downloadPdf({ companyIds: selectedIds, title: 'Directorio global — selección' })
+      const companyIds: string[] = []
+      const extractionIds: string[] = []
+      for (const id of selectedIds) {
+        const item = items.find((c) => c._id === id)
+        if (item?.refType === 'extraction') extractionIds.push(id)
+        else companyIds.push(id)
+      }
+      await downloadPdf({
+        companyIds,
+        extractionIds,
+        title: 'Directorio global — selección',
+      })
+      setToast('PDF exportado correctamente.')
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error al exportar')
     } finally {
@@ -126,6 +142,15 @@ export function DirectoryPage() {
         <div className="alert info">
           Inicia sesión para favoritos, importación con guardado y espacio personal.{' '}
           <Link to="/auth">Entrar</Link>
+        </div>
+      )}
+      {toast && (
+        <div className="alert success" role="status">
+          {toast}{' '}
+          {user && <Link to="/mis-extracciones">Ver favoritos</Link>}
+          <button type="button" className="toast-dismiss" onClick={() => setToast('')}>
+            Cerrar
+          </button>
         </div>
       )}
 

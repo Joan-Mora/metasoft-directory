@@ -39,8 +39,52 @@ function cleanText(s: string): string {
 }
 
 function findPhone(text: string): string {
-  const m = text.match(/(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{1,4}\)?[\s.-]?)?\d{3}[\s.-]?\d{3,4}[\s.-]?\d{3,4}/);
-  return m ? m[0].trim() : '';
+  const patterns = [
+    /(?:\+57[\s.-]?)?(?:\(?\d{1,3}\)?[\s.-]?)?\d{3}[\s.-]?\d{3}[\s.-]?\d{4}/,
+    /(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{1,4}\)?[\s.-]?)?\d{3}[\s.-]?\d{3,4}[\s.-]?\d{3,4}/,
+    /(?:tel|teléfono|telefono|celular|whatsapp|móvil|movil)[:\s]*([+\d][\d\s().-]{7,})/i,
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (!m) continue;
+    const raw = (m[1] || m[0]).trim();
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length >= 7 && digits.length <= 15) return raw.replace(/\s+/g, ' ').trim();
+  }
+  return '';
+}
+
+function findAddress(text: string, jsonLd = ''): string {
+  const streetFromLd = jsonLd.match(/"streetAddress"\s*:\s*"([^"]+)"/i)?.[1];
+  const locality = jsonLd.match(/"addressLocality"\s*:\s*"([^"]+)"/i)?.[1];
+  const region = jsonLd.match(/"addressRegion"\s*:\s*"([^"]+)"/i)?.[1];
+  const country = jsonLd.match(/"addressCountry"\s*:\s*"([^"]+)"/i)?.[1];
+  if (streetFromLd) {
+    return cleanText([streetFromLd, locality, region, country].filter(Boolean).join(', '));
+  }
+  if (locality || region) {
+    return cleanText([locality, region, country].filter(Boolean).join(', '));
+  }
+
+  const labeled = text.match(
+    /(?:dirección|direccion|ubicación|ubicacion|address|sede|location)[:\s]+([A-Za-zÁÉÍÓÚáéíóúñÑ0-9 .,#\-/]{4,100}?)(?=\s+(?:Email|Redes|Tel[eé]fono|WhatsApp|Contacto|Horario|@)|$)/i
+  );
+  if (labeled?.[1]) {
+    const v = cleanText(labeled[1]).replace(/[.,;]\s*$/, '');
+    if (v.length >= 4 && v.length <= 120) return v;
+  }
+
+  const colo = text.match(
+    /(?:Calle|Cl\.|Cra\.?|Carrera|Av\.|Avenida|Cr\.?|Transversal|Tv\.|Diagonal|Dg\.|Autopista)\s+[^.\n|]{4,80}/i
+  );
+  if (colo?.[0]) return cleanText(colo[0]);
+
+  const cityCountry = text.match(
+    /\b([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúñÑ]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúñÑ]+)?),\s*Colombia\b/
+  );
+  if (cityCountry?.[0]) return cleanText(cityCountry[0]);
+
+  return '';
 }
 
 function interpret(params: {
@@ -109,6 +153,10 @@ export async function extractFromUrl(rawUrl: string): Promise<ExtractedCompany> 
   }
 
   const $ = cheerio.load(html);
+  const jsonLd = $('script[type="application/ld+json"]')
+    .map((_, el) => $(el).html() || '')
+    .get()
+    .join('\n');
   $('script, style, noscript').remove();
 
   const title = cleanText($('meta[property="og:title"]').attr('content') || $('title').first().text() || '');
@@ -141,10 +189,25 @@ export async function extractFromUrl(rawUrl: string): Promise<ExtractedCompany> 
       .slice(0, 600)
   );
 
-  const bodyText = cleanText($('body').text()).slice(0, 5000);
-  const phone = findPhone(bodyText);
-  const addressHint =
-    bodyText.match(/(?:Calle|Cra|Carrera|Av\.|Avenida|Cr)\s[^.]{5,60}/i)?.[0] || '';
+  const contactBlock = cleanText(
+    $('[id*="contact" i], [class*="contact" i], footer, [itemtype*="PostalAddress" i]')
+      .map((_, el) => $(el).text())
+      .get()
+      .join(' ')
+      .slice(0, 4000)
+  );
+  const bodyText = cleanText($('body').text()).slice(0, 8000);
+  const searchText = `${contactBlock} ${bodyText}`;
+
+  const telHref = $('a[href^="tel:"]')
+    .first()
+    .attr('href')
+    ?.replace(/^tel:/i, '')
+    .trim();
+  const phone =
+    (telHref ? findPhone(telHref) || telHref : '') ||
+    findPhone(`${jsonLd} ${searchText}`);
+  const addressHint = findAddress(searchText, jsonLd);
 
   const socialLinks = $('a[href]')
     .map((_, el) => absUrl(url.toString(), $(el).attr('href')))

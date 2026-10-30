@@ -49,11 +49,10 @@ const companySchema = new Schema<ICompany>(
   { timestamps: true }
 );
 
-companySchema.pre('save', function (next) {
+companySchema.pre('save', function () {
   if (this.isModified('phone') && this.phone && !looksEncrypted(this.phone)) {
     this.phone = encryptField(this.phone);
   }
-  next();
 });
 
 function decryptPhone(doc: ICompany | null) {

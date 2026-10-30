@@ -52,7 +52,10 @@ export function CompanyCardView({
   const hasOfficial = Boolean(company.website)
 
   return (
-    <article className="company-card" data-snr={company.dataStatus}>
+    <article
+      className={`company-card${open ? ' is-menu-open' : ''}`}
+      data-snr={company.dataStatus}
+    >
       <div className="media">
         <span className="scan-line" aria-hidden="true" />
         {company.logoUrl ? (
