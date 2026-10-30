@@ -1,59 +1,114 @@
-# MetaSoft Directory — Taller 1 C3
+# MetaSoft Directory
 
-Directorio web de casas desarrolladoras de software con MongoDB local, extracción e interpretación de páginas, espacio personal, favoritos y exportación PDF.
+**Consola de extracción e inteligencia de datos** para casas desarrolladoras de software (Taller 1 C3 — Gestión y Operación de Bases de Datos, Uniminuto).
 
-**Autor:** Joan Mora  
-**Licencia:** Propietaria — ver [`LICENSE`](LICENSE). Queda prohibida la copia, redistribución o reutilización sin autorización escrita.
+| | |
+|---|---|
+| **Producto** | MetaSoft Directory · dirección de arte *Signal Layer* |
+| **Autor** | Joan Mora |
+| **Repositorio** | [github.com/Joan-Mora/metasoft-directory](https://github.com/Joan-Mora/metasoft-directory) (**privado**) |
+| **Licencia** | Propietaria — ver [`LICENSE`](LICENSE) |
+| **Versión** | 0.2.0 |
 
-## Requisitos
+---
 
-- Node.js 20+
-- Python 3.10+
-- MongoDB local en ejecución (`mongodb://127.0.0.1:27017`)
+## ¿Qué es?
+
+No es un catálogo estático: es una herramienta que:
+
+1. Mantiene un **directorio global** de 15 casas de software (Tabla 1) en **MongoDB**.
+2. **Enriquece** esos registros con scraping (logo, banner, links, descripción interpretada).
+3. Permite **importar cualquier URL oficial**, extraer e interpretar la información, previsualizarla y guardarla (personal / publicada).
+4. Clasifica cada ficha por **nivel de señal (SNR)**: completa, parcial o sin datos.
+5. Exporta **PDF** con la misma identidad visual de la interfaz.
+
+Los visitantes exploran el directorio libremente. **Guardar, publicar, favoritos y espacio personal requieren registro.**
+
+---
+
+## Stack
+
+| Capa | Tecnología |
+|------|------------|
+| Frontend | React 19 · Vite 8 · TypeScript · React Router 7 · Motion |
+| Backend | Node.js · Express 5 · TypeScript · Mongoose |
+| Base de datos | MongoDB local |
+| Seed / scraping batch | Python 3 · BeautifulSoup · requests · pymongo |
+| Extracción en runtime | Cheerio · fetch · sanitize-html |
+| PDF | PDFKit (API) |
+| Seguridad | Helmet · rate-limit · Zod · bcrypt · JWT · AES-256-GCM · SSRF guards |
+
+---
 
 ## Arranque rápido
 
 ```bash
-# 1) Variables de entorno
+# 1. Entorno
 cp .env.example backend/.env
-# Edita JWT_SECRET y DATA_ENCRYPTION_KEY
+# Completa JWT_SECRET (≥32 chars) y DATA_ENCRYPTION_KEY (64 hex)
 
-# 2) Dependencias
+# 2. Dependencias
 npm install
 npm install --prefix backend
 npm install --prefix frontend
 pip install -r scraper/requirements.txt
 
-# 3) Seed (Tabla 1 + scraping)
+# 3. Datos iniciales (Tabla 1 + enriquecimiento)
 npm run seed
 
-# 4) Desarrollo (API :4000 + UI :5173)
+# 4. Desarrollo (API :4000 + UI :5173)
 npm run dev
 ```
 
-Frontend: http://localhost:5173  
-API health: http://localhost:4000/api/health
+| Servicio | URL |
+|----------|-----|
+| Interfaz | http://localhost:5173 |
+| Health API | http://localhost:4000/api/health |
 
-## Funcionalidades
+Atajo en la UI: **Ctrl / ⌘ + K** — paleta de comandos (buscar empresa o navegar).
 
-- Búsqueda por nombre (parcial) y fichas resumen
-- Categorías: completas / parciales / sin datos
-- CRUD de casas (autenticado)
-- Importar URL → vista previa → PDF / editar / guardar (privado, publicar, ambos)
-- Mis Extracciones + Favoritos
-- Exportación PDF multi-selección
-- Seguridad: helmet, rate-limit, JWT, bcrypt, AES-256-GCM, SSRF guard
+---
+
+## Capacidades principales
+
+- Búsqueda por nombre (parcial) con resaltado de coincidencia
+- Fichas con logo clicable → sitio oficial, anillo SNR, menú ⋮ → Favoritos
+- Categorías: completa / parcial / sin datos (sistema visual coherente)
+- Importar URL con pipeline animado y vista previa (`<dialog>`)
+- Guardar: solo para mí · para mí y publicar · solo publicar  
+  (si se edita a mano → etiqueta *Modificado manualmente* → solo privado)
+- Mis Extracciones (privado) + pestaña Favoritos
+- Exportación PDF individual y multi-selección (barra flotante)
+- CRUD autenticado de casas del directorio global
+- Tema claro / oscuro persistente
+
+---
 
 ## Documentación
 
-| Documento | Descripción |
-|-----------|-------------|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Arquitectura del sistema |
-| [`SECURITY.md`](SECURITY.md) | Política y prácticas de seguridad |
+| Documento | Contenido |
+|-----------|-----------|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Arquitectura, modelo de datos, API, UI |
+| [`SECURITY.md`](SECURITY.md) | Política y controles de seguridad |
 | [`CHANGELOG.md`](CHANGELOG.md) | Historial de versiones |
-| [`docs/MANUAL_USUARIO.md`](docs/MANUAL_USUARIO.md) | Manual de usuario |
-| [`docs/MANUAL_TECNICO.md`](docs/MANUAL_TECNICO.md) | Manual técnico |
+| [`docs/MANUAL_USUARIO.md`](docs/MANUAL_USUARIO.md) | Guía de uso end-to-end |
+| [`docs/MANUAL_TECNICO.md`](docs/MANUAL_TECNICO.md) | Setup, módulos, env, despliegue |
+| [`LICENSE`](LICENSE) | Licencia propietaria © Joan Mora |
 
-## Aviso de propiedad
+---
 
-Este repositorio es **privado** y el código está protegido por licencia propietaria de Joan Mora. El build de producción desactiva source maps y minifica el cliente; la protección efectiva combina controles técnicos, repositorio privado y licencia.
+## Estructura del monorepo
+
+```text
+├── frontend/          SPA (React + Vite)
+├── backend/           API REST (Express + MongoDB)
+├── scraper/           Seed Python + enriquecimiento
+├── docs/              Manuales de usuario y técnico
+└── LICENSE / README / ARCHITECTURE / SECURITY / CHANGELOG
+```
+
+---
+
+## Propiedad intelectual
+
+Código y documentación © **Joan Mora**. Repositorio privado. Queda prohibida la copia, redistribución o reutilización sin autorización escrita del titular. El uso académico por docentes del curso Uniminuto para evaluación está permitido según los términos de [`LICENSE`](LICENSE).

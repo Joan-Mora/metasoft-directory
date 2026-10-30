@@ -1,23 +1,41 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Todos los cambios relevantes de este proyecto se documentan aquí.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).  
+Versionado semántico [SemVer](https://semver.org/lang/es/).
+
+## [0.2.0] — 2026-10-30
+
+### Added
+- Dirección de arte **Signal Layer** (tokens, tema claro/oscuro, grain, SNR rings).
+- Command palette (Ctrl/⌘+K), drawer móvil accesible, indicador de ruta activa.
+- Pipeline animado de importación (conectar → leer → extraer → interpretar).
+- `useApi` + `StateView` (loading / empty / error) en vistas principales.
+- Selection dock flotante para exportación PDF múltiple.
+- Lazy-loading de rutas; tipografías con `preconnect` + `font-display: swap`.
+
+### Changed
+- Rediseño completo de la capa visual (ya no plantilla SaaS genérica).
+- Logos oficiales como enlaces `<a target="_blank">`.
+- Preview de extracción migrado a `<dialog>` nativo.
+- Identidad del PDF de exportación alineada a la UI.
+- README / ARCHITECTURE / SECURITY / manuales actualizados a estado 0.2.
+
+### Removed
+- Ofuscación post-build del bundle (manteniendo minify + sin source maps).
+- Estilos y assets residuales del template Vite no usados.
 
 ## [0.1.0] — 2026-10-29
 
 ### Added
+- SPA React/Vite + API Express TypeScript + MongoDB local.
+- Auth registro/login (JWT + bcrypt).
+- Directorio, categorías SNR, CRUD.
+- Seed Python de Tabla 1 (15 casas) con enriquecimiento.
+- Extracción URL + preview + modos de guardado + bloqueo por edición manual.
+- Mis Extracciones, Favoritos, export PDF.
+- Hardening de seguridad y licencia propietaria.
 
-- SPA React/Vite + API Express TypeScript connected to local MongoDB.
-- Auth register/login with JWT and bcrypt.
-- Company directory search, categories (complete/partial/none), and CRUD.
-- Python seed scraper for Tabla 1 (15 software houses) with enrichment.
-- URL extraction + heuristic interpretation preview modal.
-- Save modes: private / publish / private+publish; manual-edit publish lock.
-- Favorites and Mis Extracciones section.
-- PDF export (preview, multi-select global and personal).
-- Security hardening (Helmet, rate-limit, AES field crypto, SSRF guards).
-- Proprietary LICENSE and project documentation set.
-
+[0.2.0]: https://github.com/Joan-Mora/metasoft-directory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Joan-Mora/metasoft-directory/releases/tag/v0.1.0

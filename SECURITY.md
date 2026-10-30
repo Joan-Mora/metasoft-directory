@@ -1,39 +1,62 @@
-# Security Policy
+# Política de seguridad — MetaSoft Directory
 
-**Owner:** Joan Mora  
-**Project:** MetaSoft Directory (Taller 1 C3)
+| Campo | Valor |
+|-------|--------|
+| Titular | Joan Mora |
+| Proyecto | MetaSoft Directory (Taller 1 C3) |
+| Repositorio | Privado — github.com/Joan-Mora/metasoft-directory |
+| Versiones soportadas | 0.2.x, 0.1.x |
 
-## Supported versions
+---
 
-| Version | Supported |
-|---------|-----------|
-| 0.1.x   | Yes       |
+## Reporte de vulnerabilidades
 
-## Reporting a vulnerability
+**No** abrir issues públicos con detalles de explotación.
 
-Do **not** open public issues with exploit details.
+1. Contactar al titular (Joan Mora) vía Security Advisories del repositorio privado o el canal académico acordado con el docente.
+2. Incluir: endpoint afectado, impacto, pasos de reproducción (sin escaneo masivo).
+3. Permitir un plazo razonable de remediación antes de cualquier divulgación.
 
-1. Contact the repository owner (Joan Mora) privately through GitHub Security Advisories on the private repository, or via the academic channel agreed with the course instructor.
-2. Include: affected endpoint, impact summary, and steps to reproduce (no mass scanning).
-3. Allow reasonable time for a fix before any disclosure.
+---
 
-## Security controls implemented
+## Controles implementados
 
-- **Secrets:** never committed; use `.env` / `.env.example` only as template.
-- **Passwords:** bcrypt cost factor ≥ 12; `passwordHash` excluded from JSON.
-- **Tokens:** JWT signed with `JWT_SECRET` (min 32 chars), short expiry.
-- **Field encryption:** sensitive phones encrypted at rest with AES-256-GCM (`DATA_ENCRYPTION_KEY`).
-- **HTTP hardening:** Helmet, strict CORS, global + route rate limits.
-- **Input validation:** Zod schemas on auth, companies, extract, export.
-- **SSRF protection:** extract endpoint blocks localhost/private IPs and non-http(s).
-- **HTML sanitization:** scraped text cleaned before interpretation/storage.
-- **Authorization:** private extractions scoped to `ownerId`; publish blocked when `manuallyModified`.
-- **Client build:** production source maps disabled; assets minified.
-- **Errors:** generic messages in production; no stack traces to clients.
+### Secretos y configuración
+- `.env` fuera de Git; solo existe `.env.example` como plantilla.
+- Arranque con validación Zod de variables críticas.
+- Sin secretos embebidos en el frontend (`VITE_API_URL` es pública de entorno).
 
-## Operational recommendations
+### Autenticación y autorización
+- Contraseñas con **bcrypt** (coste ≥ 12); `passwordHash` excluido de serialización.
+- **JWT** firmado con `JWT_SECRET` (≥ 32 caracteres), expiración corta.
+- Extracciones privadas acotadas a `ownerId`.
+- Publicación bloqueada si `manuallyModified === true`.
 
-- Rotate `JWT_SECRET` and `DATA_ENCRYPTION_KEY` if leaked.
-- Keep MongoDB bound to localhost in development.
-- Use HTTPS and hardened reverse proxy in any internet deployment.
-- Prefer a **private** GitHub repository; proprietary LICENSE is legal protection, not a cryptographic lock on browser JS.
+### Datos en reposo
+- Teléfonos cifrados con **AES-256-GCM** (`DATA_ENCRYPTION_KEY`, 32 bytes hex).
+- Formato: `iv:tag:ciphertext`.
+
+### Hardening HTTP / API
+- **Helmet**, CORS por allowlist, rate-limit global y en auth/extract.
+- Validación de entrada con **Zod**.
+- Mensajes de error genéricos en producción (sin stack traces al cliente).
+
+### Extracción web
+- Protección **SSRF**: solo `http`/`https`; deniega localhost, link-local e IPs privadas (resolución DNS).
+- Sanitización HTML del contenido scrapeado.
+- Timeout de fetch.
+
+### Cliente
+- Source maps desactivados en producción.
+- Bundle minificado; rutas con code-splitting (lazy).
+- Objetivos táctiles ≥ 44px; `:focus-visible`; `prefers-reduced-motion`.
+
+---
+
+## Recomendaciones operativas
+
+1. Rotar `JWT_SECRET` y `DATA_ENCRYPTION_KEY` ante sospecha de fuga.
+2. Mantener MongoDB en localhost (o con auth) en desarrollo.
+3. En internet: HTTPS, reverse proxy endurecido, secretos en vault/CI.
+4. Repositorio **privado** + licencia propietaria: la licencia es protección jurídica; el JS del navegador siempre es inspeccionable.
+5. No versionar PDFs generados en `local/` ni dumps de base de datos.

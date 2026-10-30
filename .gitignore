@@ -37,6 +37,10 @@ backend/tmp/
 backend/exports/
 *.pdf
 
+# Local-only (informes PDF, diseño Signal Layer, scripts personales) — never push
+local/
+scripts/
+
 # IDE
 .idea/
 .vscode/
