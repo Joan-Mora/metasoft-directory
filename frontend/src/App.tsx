@@ -2,7 +2,7 @@
  * © Joan Mora — Proprietary. See LICENSE.
  */
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { CardSkeletonGrid } from './components/StateView'
 import { AuthProvider } from './context/AuthContext'
@@ -11,9 +11,6 @@ import { HomePage } from './pages/HomePage'
 
 const DirectoryPage = lazy(() =>
   import('./pages/DirectoryPage').then((m) => ({ default: m.DirectoryPage }))
-)
-const CategoriesPage = lazy(() =>
-  import('./pages/CategoriesPage').then((m) => ({ default: m.CategoriesPage }))
 )
 const ImportPage = lazy(() =>
   import('./pages/ImportPage').then((m) => ({ default: m.ImportPage }))
@@ -37,6 +34,17 @@ function RouteFallback() {
   )
 }
 
+/** Legacy /categorias → /directorio?status=… */
+function CategoriesRedirect() {
+  const [params] = useSearchParams()
+  const status = params.get('status')
+  const to =
+    status === 'complete' || status === 'partial' || status === 'none'
+      ? `/directorio?status=${status}`
+      : '/directorio'
+  return <Navigate to={to} replace />
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -53,14 +61,7 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="categorias"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <CategoriesPage />
-                  </Suspense>
-                }
-              />
+              <Route path="categorias" element={<CategoriesRedirect />} />
               <Route
                 path="importar"
                 element={

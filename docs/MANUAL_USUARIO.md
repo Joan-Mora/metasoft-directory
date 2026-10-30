@@ -44,34 +44,28 @@ URL local por defecto: **http://localhost:5173**
 
 ---
 
-## 4. Directorio global
+## 4. Directorio (búsqueda + filtros)
+
+Un solo módulo: búsqueda y filtros de completitud juntos.
 
 1. Menú **Directorio**.
 2. Escribe parte del nombre (ej. `CODAL`) y **Buscar** — la coincidencia se resalta.
-3. Cada ficha muestra:
-   - Logo / iniciales (clic abre el sitio oficial en nueva pestaña si hay web).
-   - Anillo de completitud (SNR) + badges Completa / Parcial / Sin datos.
-   - Especialidad, dirección, teléfono, extracto de descripción.
-4. Menú **⋮** → **Guardar en Favoritos** (con sesión).
-5. **Modo selección** → marca varias fichas → barra flotante **N seleccionadas → Exportar PDF**.
+3. Filtra con las pestañas: **Todas / Completas / Parciales / Sin datos**.
+4. Cada ficha muestra logo (clic → sitio oficial), anillo SNR, badges, datos y descripción.
+5. Menú **⋮** → **Guardar en Favoritos** (con sesión).
+6. **Modo selección** → marca varias fichas → barra flotante **Exportar PDF**.
 
-Chip visual: canal **GLOBAL**.
+| Filtro | Significado |
+|--------|-------------|
+| Completas | Núcleo + web + logo + descripción |
+| Parciales | Al menos un dato relevante |
+| Sin datos | Sin enriquecimiento útil |
 
----
-
-## 5. Categorías (niveles de señal)
-
-| Categoría | Significado |
-|-----------|-------------|
-| Completas | Núcleo Tabla 1 + web + logo + descripción |
-| Datos parciales | Al menos un dato relevante |
-| Sin datos registrados | Sin enriquecimiento útil |
-
-Cada banda usa color, textura y tipografía mono distintas (no solo color).
+> `/categorias` redirige a `/directorio` (compatibilidad).
 
 ---
 
-## 6. Importar página (flujo protagonista)
+## 5. Importar página (flujo protagonista)
 
 1. Inicia sesión.
 2. Pega una URL `https://…` del sitio a analizar.
@@ -91,7 +85,7 @@ Cada banda usa color, textura y tipografía mono distintas (no solo color).
 
 ---
 
-## 7. Mis Extracciones
+## 6. Mis Extracciones
 
 Chip **CANAL PRIVADO**.
 
@@ -100,14 +94,14 @@ Chip **CANAL PRIVADO**.
 
 ---
 
-## 8. CRUD (administración)
+## 7. CRUD (administración)
 
 Con sesión: crear, editar y eliminar casas del directorio global.  
 La eliminación pide **confirmación**. Las ediciones se marcan como modificadas manualmente.
 
 ---
 
-## 9. Buenas prácticas
+## 8. Buenas prácticas
 
 - Usa solo sitios **oficiales** al importar.
 - No publiques datos personales de terceros sin autorización.
@@ -116,7 +110,7 @@ La eliminación pide **confirmación**. Las ediciones se marcan como modificadas
 
 ---
 
-## 10. Problemas frecuentes
+## 9. Problemas frecuentes
 
 | Síntoma | Qué revisar |
 |---------|-------------|

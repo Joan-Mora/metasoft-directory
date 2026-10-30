@@ -9,22 +9,39 @@ import { SelectionDock } from '../components/SelectionDock'
 import { StateView } from '../components/StateView'
 import { useAuth } from '../context/AuthContext'
 import { useApi } from '../hooks/useApi'
-import type { CompanyCard } from '../types'
+import type { CompanyCard, DataStatus } from '../types'
+
+const SNR_FILTERS: { id: 'all' | DataStatus; label: string }[] = [
+  { id: 'all', label: 'Todas' },
+  { id: 'complete', label: 'Completas' },
+  { id: 'partial', label: 'Parciales' },
+  { id: 'none', label: 'Sin datos' },
+]
+
+function parseStatus(raw: string | null): 'all' | DataStatus {
+  if (raw === 'complete' || raw === 'partial' || raw === 'none') return raw
+  return 'all'
+}
 
 export function DirectoryPage() {
   const { user } = useAuth()
   const [params, setParams] = useSearchParams()
   const initialQ = params.get('q') || ''
+  const initialStatus = parseStatus(params.get('status'))
   const [q, setQ] = useState(initialQ)
   const [submitted, setSubmitted] = useState(initialQ)
+  const [status, setStatus] = useState<'all' | DataStatus>(initialStatus)
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [selectMode, setSelectMode] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
 
   const { data, loading, error, reload } = useApi(
     async (signal) => {
+      const qs = new URLSearchParams()
+      if (submitted) qs.set('q', submitted)
+      if (status !== 'all') qs.set('status', status)
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL || '/api'}/companies?q=${encodeURIComponent(submitted)}`,
+        `${import.meta.env.VITE_API_URL || '/api'}/companies?${qs.toString()}`,
         {
           signal,
           headers: localStorage.getItem('token')
@@ -35,7 +52,7 @@ export function DirectoryPage() {
       if (!res.ok) throw new Error('No se pudo cargar el directorio')
       return (await res.json()) as CompanyCard[]
     },
-    [submitted]
+    [submitted, status]
   )
 
   const items = data ?? []
@@ -44,9 +61,31 @@ export function DirectoryPage() {
     [selected]
   )
 
+  const syncParams = (nextQ: string, nextStatus: 'all' | DataStatus) => {
+    const next = new URLSearchParams()
+    if (nextQ) next.set('q', nextQ)
+    if (nextStatus !== 'all') next.set('status', nextStatus)
+    setParams(next)
+  }
+
   const onSearch = () => {
-    setSubmitted(q.trim())
-    setParams(q.trim() ? { q: q.trim() } : {})
+    const nextQ = q.trim()
+    setSubmitted(nextQ)
+    syncParams(nextQ, status)
+    setSelected({})
+  }
+
+  const onFilter = (id: 'all' | DataStatus) => {
+    setStatus(id)
+    syncParams(submitted, id)
+    setSelected({})
+  }
+
+  const clearAll = () => {
+    setQ('')
+    setSubmitted('')
+    setStatus('all')
+    setParams({})
     setSelected({})
   }
 
@@ -79,10 +118,9 @@ export function DirectoryPage() {
 
   return (
     <section>
-      <h1 className="page-title">Directorio global</h1>
+      <h1 className="page-title">Directorio</h1>
       <p className="page-lead">
-        Busca por nombre o parte del nombre. La señal SNR indica completitud. El logo abre el sitio
-        oficial.
+        Busca por nombre y filtra por completitud (SNR). El logo abre el sitio oficial cuando existe.
       </p>
       {!user && (
         <div className="alert info">
@@ -90,6 +128,7 @@ export function DirectoryPage() {
           <Link to="/auth">Entrar</Link>
         </div>
       )}
+
       <div className="toolbar">
         <label className="sr-only" htmlFor="dir-search">
           Buscar casa desarrolladora
@@ -97,7 +136,7 @@ export function DirectoryPage() {
         <input
           id="dir-search"
           type="search"
-          placeholder="Buscar señal… p.ej. CODAL"
+          placeholder="Buscar… p.ej. CODAL"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSearch()}
@@ -118,26 +157,40 @@ export function DirectoryPage() {
         </button>
       </div>
 
+      <div className="tabs" role="tablist" aria-label="Filtro por completitud">
+        {SNR_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            role="tab"
+            aria-selected={status === f.id}
+            className={status === f.id ? 'active' : ''}
+            onClick={() => onFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <StateView
         loading={loading}
         error={error}
         onRetry={reload}
         empty={!loading && !error && items.length === 0}
-        emptyTitle="Sin coincidencias"
-        emptyHint="Prueba con otra parte del nombre o limpia la búsqueda."
+        emptyTitle="Sin resultados"
+        emptyHint="Prueba otro nombre o cambia el filtro de completitud."
         emptyAction={
-          <button type="button" className="btn secondary" onClick={() => { setQ(''); setSubmitted(''); setParams({}) }}>
+          <button type="button" className="btn secondary" onClick={clearAll}>
             Ver todas
           </button>
         }
       >
-        <div className="grid-cards grid-bento">
-          {items.map((c, i) => (
+        <div className="grid-cards">
+          {items.map((c) => (
             <CompanyCardView
               key={c._id}
               company={c}
               query={submitted}
-              featured={i === 0 && !submitted}
               selected={!!selected[c._id]}
               onSelect={
                 selectMode

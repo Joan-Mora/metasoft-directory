@@ -8,8 +8,7 @@ import type { CompanyCard } from '../types'
 
 const ROUTES = [
   { label: 'Inicio', path: '/', hint: 'Landing' },
-  { label: 'Directorio', path: '/directorio', hint: 'Buscar casas' },
-  { label: 'Categorías', path: '/categorias', hint: 'SNR' },
+  { label: 'Directorio', path: '/directorio', hint: 'Buscar y filtrar' },
   { label: 'Importar URL', path: '/importar', hint: 'Extracción' },
   { label: 'Mis Extracciones', path: '/mis-extracciones', hint: 'Privado' },
   { label: 'CRUD Admin', path: '/admin', hint: 'Gestión' },

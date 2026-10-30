@@ -71,9 +71,8 @@ Atajo en la UI: **Ctrl / ⌘ + K** — paleta de comandos (buscar empresa o nave
 
 ## Capacidades principales
 
-- Búsqueda por nombre (parcial) con resaltado de coincidencia
+- Búsqueda por nombre (parcial) con resaltado + filtros SNR en el mismo Directorio
 - Fichas con logo clicable → sitio oficial, anillo SNR, menú ⋮ → Favoritos
-- Categorías: completa / parcial / sin datos (sistema visual coherente)
 - Importar URL con pipeline animado y vista previa (`<dialog>`)
 - Guardar: solo para mí · para mí y publicar · solo publicar  
   (si se edita a mano → etiqueta *Modificado manualmente* → solo privado)

@@ -461,9 +461,11 @@ select {
 
 .main {
   width: var(--content);
+  max-width: 100%;
   margin: 0 auto;
   padding: var(--s-8) 0 var(--s-16);
   flex: 1;
+  overflow-x: clip;
 }
 
 .footer {
@@ -495,6 +497,9 @@ select {
 .meta {
   color: var(--ink-muted);
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .mono {
@@ -703,12 +708,15 @@ select {
 /* ——— Cards grid (phase 1 base; phase 2 upgrades to bento) ——— */
 .grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--s-4);
+  width: 100%;
+  align-items: stretch;
 }
 
 .company-card {
   container-type: inline-size;
+  container-name: company-card;
   background: var(--panel);
   border: 1px solid var(--stroke);
   border-radius: var(--r-lg);
@@ -716,6 +724,9 @@ select {
   display: flex;
   flex-direction: column;
   position: relative;
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
   box-shadow: var(--elev-1);
   transition: border-color var(--dur-med) var(--ease-soft), transform var(--dur-med) var(--ease-out);
 }
@@ -726,7 +737,8 @@ select {
 }
 
 .company-card .media {
-  height: 132px;
+  height: 120px;
+  flex-shrink: 0;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--signal) 25%, #0a1220), color-mix(in srgb, var(--signal-2) 30%, #0a1220));
   display: grid;
@@ -735,9 +747,16 @@ select {
   overflow: hidden;
 }
 
+.company-card .media a {
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  padding: var(--s-2);
+}
+
 .company-card .media img {
-  max-height: 80px;
-  max-width: 70%;
+  max-height: 72px;
+  max-width: 100%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -750,6 +769,8 @@ select {
   padding: var(--s-4);
   display: grid;
   gap: var(--s-2);
+  flex: 1;
+  min-width: 0;
 }
 
 .company-card h3 {
@@ -757,24 +778,34 @@ select {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  flex: 1;
 }
 
 .card-actions {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: var(--s-2);
+  align-items: flex-end;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding-top: var(--s-2);
+  min-width: 0;
 }
 
 .check-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--s-2);
+  min-width: 0;
 }
 
 .check-row input[type='checkbox'] {
   width: 1.15rem;
   height: 1.15rem;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
   accent-color: var(--signal);
 }
 
@@ -1067,6 +1098,7 @@ select {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  margin-top: 0.15rem;
 }
 
 .snr-ring::after {
@@ -1173,24 +1205,7 @@ select {
   border: 0;
 }
 
-/* Bento / featured cards */
-@media (min-width: 768px) {
-  .grid-bento {
-    grid-template-columns: repeat(12, 1fr);
-  }
-  .grid-bento > .company-card {
-    grid-column: span 4;
-  }
-  .grid-bento > .company-card.is-featured {
-    grid-column: span 8;
-    grid-row: span 2;
-  }
-  .grid-bento > .company-card.is-featured .media {
-    height: 200px;
-  }
-}
-
-@container (max-width: 240px) {
+@container company-card (max-width: 240px) {
   .company-card .card-desc {
     display: none;
   }
@@ -1223,12 +1238,18 @@ select {
   margin: 0;
   color: var(--ink-muted);
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .badge-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-1);
+  min-width: 0;
 }
 
 .badge.official {

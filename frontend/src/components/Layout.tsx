@@ -10,7 +10,6 @@ import { CommandPalette } from './CommandPalette'
 const LINKS = [
   { to: '/', label: 'Inicio', end: true },
   { to: '/directorio', label: 'Directorio' },
-  { to: '/categorias', label: 'Categorías' },
   { to: '/importar', label: 'Importar' },
   { to: '/mis-extracciones', label: 'Mis Extracciones' },
   { to: '/admin', label: 'CRUD' },

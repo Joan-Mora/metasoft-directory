@@ -104,8 +104,8 @@ JWT en header `Authorization: Bearer …`. Expiración corta configurable (`JWT_
 | Ruta | Vista |
 |------|-------|
 | `/` | Landing informativa + demo de pipeline |
-| `/directorio` | Búsqueda, bento de fichas, selección → PDF |
-| `/categorias` | Bandas SNR |
+| `/directorio` | Búsqueda + filtros SNR + selección → PDF |
+| `/categorias` | Redirección a `/directorio` (legacy) |
 | `/importar` | Pipeline de extracción + preview dialog |
 | `/mis-extracciones` | Personales + Favoritos |
 | `/admin` | CRUD |
