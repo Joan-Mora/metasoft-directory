@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+scraper/.venv/
+scraper/venv/
+__pycache__/
+*.pyc
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/.env.local
+scraper/.env
+
+# Builds
+dist/
+frontend/dist/
+backend/dist/
+*.tsbuildinfo
+
+# Logs & caches
+logs/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.cache/
+.vite/
+
+# Scraped / generated assets (keep structure)
+scraper/assets/downloads/
+backend/tmp/
+backend/exports/
+*.pdf
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Coverage / test
+coverage/
+.nyc_output/
